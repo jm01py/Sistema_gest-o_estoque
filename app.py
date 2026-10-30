@@ -183,6 +183,45 @@ def consultar_historico():
             f"Data: {r[4]} | Observação: {r[5] or '-'}"
         )
 
+def relatorio_gerencial_curto():
+    conn = conectar()
+    cursor = conn.cursor()
+
+    cursor.execute("SELECT COUNT(*) FROM produtos")
+    total_produtos = cursor.fetchone()[0]
+
+    cursor.execute("""
+        SELECT nome, quantidade
+        FROM produtos
+        WHERE quantidade <= estoque_minimo
+    """)
+    baixo_estoque = cursor.fetchall()
+
+    cursor.execute("""
+        SELECT SUM(quantidade * preco_venda)
+        FROM produtos
+    """)
+    valor_total = cursor.fetchone()[0] or 0
+
+    conn.close()
+
+    print("\n=======================================")
+    print("       RELATORIO GERENCIAL")
+    print("             TechShock")
+    print("=======================================")
+
+    print(f"Total de produtos cadastrados: {total_produtos}")
+    print(f"Valor total em estoque: R$ {valor_total:.2f}")
+
+    print("\nProdutos com estoque baixo:")
+
+    if baixo_estoque:
+        for nome, qtd in baixo_estoque:
+            print(f" - {nome}: {qtd} unidades")
+    else:
+        print(" Nenhum produto com estoque baixo.")
+
+    print("=======================================\n")
 
 def menu():
     while True:
@@ -192,6 +231,7 @@ def menu():
         print("3 - Registrar entrada")
         print("4 - Registrar saída")
         print("5 - Consultar histórico")
+        print("6 - Relatório gerencial")
         print("0 - Sair")
 
         opcao = input("Escolha uma opção: ").strip()
@@ -207,8 +247,10 @@ def menu():
                 movimentar_estoque("SAIDA")
             elif opcao == "5":
                 consultar_historico()
+            elif opcao == "6":
+                relatorio_gerencial_curto()
             elif opcao == "0":
-                print("Sistema encerrado.")
+                print("Sistema encerrado.")    
                 break
             else:
                 print("Opção inválida.")
